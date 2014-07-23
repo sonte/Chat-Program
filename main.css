@@ -1,0 +1,100 @@
+body, textarea, input{
+	font: 13px "Trebuchet MS", sans-serif;
+}
+
+.chat{
+	width:98%;
+    margin: 0;
+
+}
+.chat-contain,
+#contain,
+#chatnm-contain{
+	border:1px solid #bbb;
+    display: block;
+    height: 35px;
+}
+.chat-contain{
+    height:422px;
+    overflow: hidden;
+    border-top: 0;
+    border-bottom: 0;
+
+}
+#contain{
+    height: 52px;
+}
+.chat-messages{
+	width:85%;
+    min-width: 50px;
+    display: inline-block;
+    float: left;
+    height: 400px;
+	overflow-y:scroll;
+	padding:10px;
+    margin-right: 0;
+
+}
+.chatrm{
+    height: 400px;
+    display: inline-block;
+    width: 10%;
+    float: right;
+    padding: 10px;
+    overflow:scroll;
+    margin: 0;
+    min-width: 10px;
+}
+
+
+.chat-name{
+	width: 90%;
+	padding:10px;
+    padding-right: 0px;
+	margin:0;
+	
+}
+.chat-textarea{
+    width: 98%;
+    height: 30px;
+	padding:10px;
+    padding-right: 9px;
+	margin:0;
+    max-width: 98%;
+    border: 0;
+	
+}
+
+.chat-status{
+	color:#bbb;
+}
+
+.chat-textarea, .chat-name{
+	outline:none;
+}
+
+#pop {
+    width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: white;
+}
+.form{
+    border: 1px solid black;
+    margin-top:40%;
+    padding: 15px;
+    text-align: right;
+    opacity: 1;
+}
+
+.popup {
+    position: absolute;
+    background-color: gray;
+    opacity: 0.5;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    margin: 0px;
+    padding: 0px;
+}

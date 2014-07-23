@@ -1,0 +1,189 @@
+<!DOCTYPE  html>
+<html>
+<head>
+    <title>Chat</title>
+    <link rel="stylesheet" href="main.css">
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+<div class="popup">
+    <div id="pop">
+        <div class="form">
+            <form id="form">
+                Name: <input onkeydown="if (event.keyCode == 13) {runCheck(); return false;}" type="text"
+                             name="name"/><br>
+                Chatroom: <input onkeydown="if (event.keyCode == 13) {runCheck(); return false;}" type="text"
+                                 name="chatroom"/><br>
+                Leave blank to enter the default chat room.<br>
+                <input type="button" value="Submit" onclick="runCheck()"/><br>
+                <span id="warn"></span>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="chat">
+    <div id="chatnm-contain">
+        <div class="chat-name">
+            <span id="chat-nm"></span>
+        </div>
+    </div>
+    <div class="chat-contain">
+        <div class="chat-messages">
+
+        </div>
+
+
+        <div class="chatrm"></div>
+    </div>
+    <div id="contain">
+        <textarea class="chat-textarea" placeholder="Type your message"> </textarea>
+    </div>
+    <div class="chat-status">Status: <span>idle</span></div>
+
+</div>
+<script src="http://dev.spyguyscomic.com:8080/socket.io/socket.io.js"></script>
+<script src="jquery-2.1.1.min.js"></script>
+<script src="jquery.tinysort.min.js"></script>
+<script type="text/javascript">
+
+    var chatRoom = 'new',
+            chatName,
+            form;
+    try {
+        var socket = io.connect('http://dev.spyguyscomic.com:8080');
+
+    } catch (e) {
+        console.log(e + "unable to connect to server");
+    }
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+    function warn(warning) {
+        $('#warn').text(warning);
+    }
+
+    function runCheck() {
+        form = $('#form').serializeArray();
+        if (form[0].value !== "") {
+            chatName = escapeHtml(form[0].value);
+            if (form[1].value !== "") {
+                chatRoom = escapeHtml(form[1].value);
+            }
+            var send = {name: chatName, room: chatRoom};
+            socket.emit('check', send);
+        } else {
+            warn("You must enter a name");
+        }
+
+    }
+    function startChat() {
+        $('.popup').css('display', 'none');
+        $('#chat-nm').append(chatName+ ' is now chatting in room "' + chatRoom + '"');
+        setchatroom(chatRoom);
+    }
+
+    function setchatroom(room) {
+        socket.emit('room', { room: room, name: chatName});
+        socket.emit('input', {
+            name: chatName,
+            message: 'Has joined the chat',
+            chatroom: chatRoom
+        });
+
+    }
+    function addsortuser(username){
+        var user = document.createElement('div');
+        user.setAttribute('class', 'user');
+        user.setAttribute('id', username);
+        user.textContent = username;
+        $('.chatrm').append(user);
+        $('.chatrm > div').tsort("",{attr:'id'});
+    }
+    $(document).ready(function () {
+
+        var getNode = function (s) {
+                    return document.querySelector(s);
+                },
+                status = getNode('.chat-status span'),
+                textarea = getNode('.chat-textarea'),
+                messages = getNode('.chat-messages'),
+                users = getNode('.chatrm');
+        statusDefault = status.textContent,
+                setStatus = function (s) {
+                    status.textContent = s;
+
+                    if (s !== statusDefault) {
+                        var delay = setTimeout(function () {
+                            setStatus(statusDefault);
+                            clearInterval(delay);
+                        }, 3000);
+                    }
+                };
+
+
+        socket.on('connect', function () {
+            //setchatroom(chatRoom);
+        });
+
+        if (socket !== undefined) {
+
+            socket.on('good', function () {
+                startChat();
+            });
+            socket.on('bad', function () {
+                warn("User already exists in that chat room");
+            });
+
+            socket.on('output', function (data) {
+                console.log(data);
+                if (data.length) {
+                    for (var x = 0; x < data.length; x = x + 1) {
+                        var message = document.createElement('div');
+                        message.setAttribute('class', 'chat-message');
+                        message.textContent = data[x].name + ': ' + data[x].message;
+                        messages.appendChild(message);
+                        messages.insertBefore(message, messages.lastChild);
+                        messages.scrollTop = messages.scrollHeight;
+                    }
+                }
+            });
+            socket.on('new-user', function (data) {
+                addsortuser(data);
+            });
+            socket.on('add-user', function(data){
+                addsortuser(data);
+            });
+            socket.on('user-disscon',function(data){
+                data = '#'+data;
+
+                $(data).remove();
+            });
+            socket.on('status', function (data) {
+                setStatus((typeof data === 'object') ? data.message : data);
+                if (data.clear === true) {
+                    textarea.value = '';
+                }
+            });
+
+            textarea.addEventListener('keydown', function (event) {
+                var self = this,
+                        name = chatName;
+
+                if (event.which === 13 && event.shiftKey === false) {
+                    socket.emit('input', {
+                        name: name,
+                        message: self.value,
+                        chatroom: chatRoom
+                    });
+                    event.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
