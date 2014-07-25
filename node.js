@@ -6,11 +6,11 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
     var collection = db.collection('userlist');
     collection.remove(function (err, result) {
     });
-
+    /**/
     client.on('connection', function (socket) {
-        //console.log(socket.id);
+
         var ip = socket.handshake.address.address;
-        var id = socket.id;
+        //var id = socket.id;
         var collection = db.collection('userlist');
         collection.count({ip: ip}, function (e, count) {
             if (count > 5) {
@@ -18,7 +18,7 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
             } else {
                 //console.log('less than 5');
             }
-            var insertion = {ip: ip, socket: id};
+            var insertion = {ip: ip, socket: socket.id};
             collection.insert(insertion, {w: 0});
         });
         socket.on('check', function (send) {
@@ -49,6 +49,7 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
             var collection = db.collection('userlist');
             var socketid = {socket: socket.id};
             var info = {name: data.name, room: data.room};
+            console.log(socket.id + " " + data.name);
             collection.update(socketid, { $set: info}, function (e) {
                 if (e !== null) {
                     console.log(e);
@@ -61,7 +62,7 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
 
                 while (results[x]) {
                     if (results[x].name != data.name) {
-                        socket.emit('new-user', results[x].name);
+                    socket.emit('add-user', results[x].name);
                     }
                     x = x + 1;
                 }
@@ -70,9 +71,10 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
             client.in(data.room).emit('add-user', data.name);
             //socket.emit('new-user',data.name);
         });
-        sentStatus = function (s) {
+        /*sentStatus = function (s) {
             socket.emit('status', s);
-        };
+
+        };*/
 
         /*col.find().limit(100).sort({_id: 1}).toArray(function(err,res){
          if(err) throw err;
@@ -81,18 +83,19 @@ mongo.connect('mongodb://127.0.0.1/chat', function (err, db) {
 
         socket.on('input', function (data) {
             var name = data.name, message = data.message, chatroom = data.chatroom, whitespacePattern = /^\s*$/;
-            console.log(data);
+            //console.log(data);
             if (whitespacePattern.test(name) || whitespacePattern.test(message)) {
-                sentStatus('Name and message is required.');
+                //sentStatus('Name and message is required.');
+                socket.emit('status',{message: "Not Allowed", clear : true});
             } else {
-                //console.log(chatroom);
-
-                client.in(chatroom).emit('output', [data]);
-
-                sentStatus({
+                console.log(socket.id);
+                socket.emit('status',{
                     message: "Message sent",
                     clear: true
                 });
+                client.in(chatroom).emit('output', [data]);
+
+
 
             }
 

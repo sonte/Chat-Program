@@ -47,25 +47,37 @@
 <script src="jquery-2.1.1.min.js"></script>
 <script src="jquery.tinysort.min.js"></script>
 <script type="text/javascript">
-
+    /*Global Variables*/
     var chatRoom = 'new',
             chatName,
             form;
+    /*Initiates socket connection to node server.
+    You will have to replace this with you own server address.
+    */
     try {
         var socket = io.connect('http://dev.spyguyscomic.com:8080');
 
     } catch (e) {
         console.log(e + "unable to connect to server");
     }
+    /*This is a convenient function that i found online to escape text
+     * I didn't write this.
+     */
     function escapeHtml(str) {
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
     }
+    /*Several times in the code for the pop-up div, I have to change the warning
+    * text, so I made this function to make it easier.
+    * */
     function warn(warning) {
         $('#warn').text(warning);
     }
-
+    /*This function makes sure that you have entered something into the name field of
+    * the form, and then changes the global var for chatRoom if something was entered there.
+    * After that it sends the name and chatroom to the server to check if that name is
+    * already in use in that room.*/
     function runCheck() {
         form = $('#form').serializeArray();
         if (form[0].value !== "") {
@@ -80,14 +92,18 @@
         }
 
     }
+    /*This function is called after the server returns a 'good' which means that there is
+    * not a user with that name in that chat room.  It removes the overlaying div form that asks
+    * for the name and chat room. Then it sends a request to the server for the user to join the
+    * chat room. after that it broadcasts a message to the chat room that the user has joined.
+    *
+    *
+    * Possible to do : move the broadcast of the user joining server side
+    */
     function startChat() {
         $('.popup').css('display', 'none');
         $('#chat-nm').append(chatName+ ' is now chatting in room "' + chatRoom + '"');
-        setchatroom(chatRoom);
-    }
-
-    function setchatroom(room) {
-        socket.emit('room', { room: room, name: chatName});
+        socket.emit('room', { room: chatRoom, name: chatName});
         socket.emit('input', {
             name: chatName,
             message: 'Has joined the chat',
@@ -95,6 +111,11 @@
         });
 
     }
+    /*This function takes care of the user list to the right of the chat window.  It will automatically
+    * add a new div with the user name and set the id of that div to the user name for easy retrieval
+    * when said users leaves.  After that it will use jquery.tinsort to order the divs in alphabetical
+    * order
+    */
     function addsortuser(username){
         var user = document.createElement('div');
         user.setAttribute('class', 'user');
@@ -103,8 +124,12 @@
         $('.chatrm').append(user);
         $('.chatrm > div').tsort("",{attr:'id'});
     }
+    /*Jquery function that waits until the document is loaded before executing the below code.*/
     $(document).ready(function () {
-
+        /*Function to return elements of the document as variables for manipulation
+        * This code is from the original tutorial that I followed to make this chat application.
+        * I plan to eventually remove this and replace it with JQuery calls.
+        */
         var getNode = function (s) {
                     return document.querySelector(s);
                 },
@@ -112,6 +137,11 @@
                 textarea = getNode('.chat-textarea'),
                 messages = getNode('.chat-messages'),
                 users = getNode('.chatrm');
+
+        /*This fucntion controls status messages that are sent from the server or locally by another function.
+        * The cool thing about this is that because of the setinterval the text will always revert to idle after
+        * 3 seconds.
+        */
         statusDefault = status.textContent,
                 setStatus = function (s) {
                     status.textContent = s;
@@ -124,22 +154,35 @@
                     }
                 };
 
-
+        //Unused function at this time
         socket.on('connect', function () {
             //setchatroom(chatRoom);
         });
-
+        /*This if statement makes sure that a connection has been established to the server before executing the
+        * below code.
+        *
+        *
+        * I am not 100% sure that this is needed.  Technically the only part of this whole block that could be
+        * executed is the socket.emit('input') which would just trow an error.  However if the server is down, it
+        * continues to try to connect to the server anyway throwing errors. I may try to remove this in the future,
+        * but there is no reason to do it now.*/
         if (socket !== undefined) {
-
+            //'good' is returned from the server which means that the user can start chatting.
             socket.on('good', function () {
                 startChat();
             });
+            //There was already a user in the chat room with that name you got to choose another one :).
             socket.on('bad', function () {
                 warn("User already exists in that chat room");
             });
-
+            /*This function puts the text that is sent by the user into the chat window.  Prefacing it with
+            * their user id. It also causes the text to go from top to bottom, and it will scroll to the bottom
+            * if new text is entered.
+            *
+            * to do : implement some code that will not scroll if the user is scrolled up but alert them that new
+            * text has been put into the window.*/
             socket.on('output', function (data) {
-                console.log(data);
+               // console.log(data);
                 if (data.length) {
                     for (var x = 0; x < data.length; x = x + 1) {
                         var message = document.createElement('div');
@@ -151,9 +194,11 @@
                     }
                 }
             });
-            socket.on('new-user', function (data) {
-                addsortuser(data);
-            });
+
+            //socket.on('new-user', function (data) {
+               // addsortuser(data);
+            //});
+            /*This function is triggered */
             socket.on('add-user', function(data){
                 addsortuser(data);
             });
@@ -163,19 +208,22 @@
                 $(data).remove();
             });
             socket.on('status', function (data) {
-                setStatus((typeof data === 'object') ? data.message : data);
-                if (data.clear === true) {
+                console.log(data);
+
+                //setStatus((typeof data === 'object') ? data.message : data);
+                console.log("fired");
+                if (data.clear == true) {
                     textarea.value = '';
                 }
             });
 
             textarea.addEventListener('keydown', function (event) {
-                var self = this,
-                        name = chatName;
+                var self = this;
+
 
                 if (event.which === 13 && event.shiftKey === false) {
                     socket.emit('input', {
-                        name: name,
+                        name: chatName,
                         message: self.value,
                         chatroom: chatRoom
                     });
