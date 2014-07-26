@@ -198,25 +198,39 @@
             //socket.on('new-user', function (data) {
                // addsortuser(data);
             //});
-            /*This function is triggered */
+            /*This function is triggered initially several times to add all of the users
+            * currently in the chat room to the user window, and then it is triggered whenever
+            * a new user joins the chat room.
+            */
             socket.on('add-user', function(data){
                 addsortuser(data);
             });
+            /*This fucntion removes the users from the user window when they disconnect from
+            * the server.
+            */
             socket.on('user-disscon',function(data){
                 data = '#'+data;
 
                 $(data).remove();
             });
+            /*This function once a message is successfully received by the server.  It sends
+            * a message back saying the message has been sent triggering the setStatus function
+            * to change the status at the bottom of the screen, and then it clears out the text
+            * in the text box that you sent.
+            */
             socket.on('status', function (data) {
-                console.log(data);
-
+                //console.log(data);
+                setStatus(data.message);
                 //setStatus((typeof data === 'object') ? data.message : data);
-                console.log("fired");
+                //console.log("fired");
                 if (data.clear == true) {
                     textarea.value = '';
                 }
             });
-
+            /*This event listener is set to trigger the below code when the enter key is presses.
+            * It sends the text in the text box to the server and prevents the default action of
+            * going down to the next line unless the shift key is held.
+            */
             textarea.addEventListener('keydown', function (event) {
                 var self = this;
 
