@@ -15,9 +15,11 @@ javascript side that you will need to make this work.
 node.js
 
 mongodb
+
 socket.io
 
 Javascript
 
 jquery
-jquear.tinysort
+
+jquery.tinysort
