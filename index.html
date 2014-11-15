@@ -43,7 +43,7 @@
     <div class="chat-status">Status: <span>idle</span></div>
 
 </div>
-<script src="http://dev.spyguyscomic.com:8080/socket.io/socket.io.js"></script>
+<script src="http://localhost:8080/socket.io/socket.io.js"></script>
 <script src="jquery-2.1.1.min.js"></script>
 <script src="jquery.tinysort.min.js"></script>
 <script type="text/javascript">
@@ -55,7 +55,7 @@
     You will have to replace this with you own server address.
     */
     try {
-        var socket = io.connect('http://dev.spyguyscomic.com:8080');
+        var socket = io.connect('http://localhost:8080');
 
     } catch (e) {
         console.log(e + "unable to connect to server");

@@ -28,7 +28,9 @@ local.properties
 
 # PDT-specific
 .buildpath
-
+node_modules/
+jquery.tinysort.min.js
+jquery-2.1.1.min.js
 
 #################
 ## Visual Studio
